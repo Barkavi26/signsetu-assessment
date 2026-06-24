@@ -17,10 +17,11 @@ built as part of the NPTEL Summer Internship selection process under
 
 ## Project Structure
 SignSetu_Assessment/
+
 ├── test_api.py          
-        # Happy path — full lifecycle test
+        
 ├── test_vulnerabilities.py  
-    # Vulnerability hunting—all bug tests
+    
 ├── .gitignore
 
 └── README.md
