@@ -1,4 +1,21 @@
+# SignSetu QA Assessment — NPTEL Summer Internship 2026
+
+Automated API test suite for the **SignSetu Video Caption Processing Pipeline**,
+built as part of the NPTEL Summer Internship selection process under
+**Prof. Bala Ramadurai, IIT Madras**.
+
 ---
+
+## Candidate Details
+
+- **Name:** Barkavi
+- **GitHub:** Barkavi26
+- **Email:** pbarkavi1@gmail.com
+- **Base URL Tested:** https://qa-testing-navy.vercel.app
+
+---
+
+## Project Structure
 
 ## Setup & Run
 
