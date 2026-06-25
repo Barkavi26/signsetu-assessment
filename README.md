@@ -14,13 +14,36 @@ built as part of the NPTEL Summer Internship selection process under
 ## Project Structure
 SignSetu_Assessment/
 
-├── test_api.py                  
-├── test_vulnerabilities.py      
+├── test_api.py                 
+
+├── test_vulnerabilities.py    
+
 ├── .gitignore
+
 └── README.md
 
+## Setup & Run
+
+```bash
+# Install dependency
+pip install requests
+
+# Run happy path lifecycle test
+python test_api.py
+
+# Run full vulnerability + bonus bug tests
+python test_vulnerabilities.py
+```
+
+No framework needed. Works directly with **Python 3.11+**.
+
+## Testing Strategy
+
+### 1. Happy Path — Full Lifecycle (test_api.py)
+Tests the complete intended workflow end-to-end:
+Auth → Create Video → Trigger Captions → Poll Status → Fetch Captions → Delete
 ### 2. Async Handling
-Caption processing is asynchronous. The suite uses a **polling loop** that
+Caption processing is asynchronous. The suite uses a polling loop that
 calls `GET /api/videos/{id}` every 3 seconds for up to 20 attempts, waiting
 for `status: completed`.
 
