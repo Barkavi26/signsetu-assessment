@@ -3,9 +3,11 @@ import time
 
 BASE_URL = "https://qa-testing-navy.vercel.app"
 
-# Generate unique candidate ID for every run
+# Dynamic candidate ID — required by API (fixed ID causes StateCollision bug)
+CANDIDATE_ID = f"barkavi_{int(time.time())}"
+
 headers = {
-    "X-Candidate-ID": f"barkavi_{int(time.time())}"
+    "X-Candidate-ID": CANDIDATE_ID
 }
 
 # -------------------------
@@ -31,7 +33,7 @@ print(token)
 
 # Auth headers
 auth_headers = {
-    "X-Candidate-ID": headers["X-Candidate-ID"],
+    "X-Candidate-ID": CANDIDATE_ID,
     "Authorization": f"Bearer {token}"
 }
 
@@ -40,7 +42,7 @@ auth_headers = {
 # -------------------------
 video_response = requests.post(
     f"{BASE_URL}/api/videos",
-    headers=headers
+    headers=auth_headers
 )
 
 print("\nCREATE VIDEO:")
@@ -62,7 +64,7 @@ print(video_id)
 # -------------------------
 process_response = requests.post(
     f"{BASE_URL}/api/videos/{video_id}/process-captions",
-    headers=headers
+    headers=auth_headers
 )
 
 print("\nPROCESS:")
@@ -73,8 +75,22 @@ print(process_response.text)
 # POLL STATUS
 # -------------------------
 print("\nWAITING FOR COMPLETION...")
+print("NOTE: Token expires in 5 seconds — re-authenticating each poll (Bug #4)")
 
-for i in range(10):
+for i in range(20):
+
+    # Re-authenticate every poll due to 5-second token expiry bug
+    reauth = requests.post(f"{BASE_URL}/api/auth", headers=headers)
+    if reauth.status_code == 201:
+        new_token = reauth.json()["token"]
+        auth_headers["Authorization"] = f"Bearer {new_token}"
+        print(f"  Re-authenticated at attempt {i+1}")
+    elif reauth.status_code == 409:
+        print(f"  BUG: StateCollision at attempt {i+1} — cannot re-auth with same ID")
+        print(f"  This proves Bug B4: no session cleanup endpoint exists")
+        break
+    else:
+        print(f"  Re-auth failed at attempt {i+1}: {reauth.text}")
 
     status_response = requests.get(
         f"{BASE_URL}/api/videos/{video_id}",
@@ -85,13 +101,17 @@ for i in range(10):
     print(status_response.status_code)
     print(status_response.text)
 
+    if status_response.status_code == 401:
+        print("BUG CONFIRMED: Token expired during async polling — 5s too short")
+        break
+
     data = status_response.json()
 
     if data.get("status") == "completed":
         print("\nPROCESSING COMPLETED!")
         break
 
-    time.sleep(1)
+    time.sleep(3)
 
 # -------------------------
 # GET CAPTIONS
@@ -107,6 +127,13 @@ captions_response = requests.get(
 print(captions_response.status_code)
 print(captions_response.text)
 
+if captions_response.status_code == 200:
+    data = captions_response.json()
+    if isinstance(data, list) and len(data) == 0:
+        print("BUG CONFIRMED: Captions empty even after processing (Bug #5)")
+    else:
+        print("Captions returned successfully")
+
 # -------------------------
 # DELETE VIDEO
 # -------------------------
@@ -119,5 +146,23 @@ delete_response = requests.delete(
 
 print(delete_response.status_code)
 print(delete_response.text)
+
+# -------------------------
+# DOUBLE DELETE TEST
+# -------------------------
+print("\nDOUBLE DELETE TEST:")
+
+delete_response2 = requests.delete(
+    f"{BASE_URL}/api/videos/{video_id}",
+    headers=auth_headers
+)
+
+print(delete_response2.status_code)
+print(delete_response2.text)
+
+if delete_response2.status_code == 204:
+    print("BUG CONFIRMED: Double delete returns 204 — should be 404 (Bug #2)")
+elif delete_response2.status_code == 404:
+    print("PASS: Second delete correctly returns 404")
 
 print("\nTEST FLOW COMPLETED")

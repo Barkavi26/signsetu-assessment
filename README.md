@@ -1,4 +1,4 @@
-# SignSetu QA Assessment — NPTEL Summer Internship 2026
+# SignSetu Assessment — NPTEL Summer Internship 2026
 
 Automated API test suite for the **SignSetu Video Caption Processing Pipeline**,
 built as part of the NPTEL Summer Internship selection process under

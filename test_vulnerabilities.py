@@ -407,6 +407,24 @@ def test_idor_access(token):
 
     delete_video(token, video_id)
 
+# ─── BONUS TEST 8: StateCollision ────────────────────
+
+def test_state_collision():
+    """Same candidate ID cannot authenticate twice — no session cleanup exists."""
+    # First auth
+    r1 = requests.post(f"{BASE_URL}/api/auth", headers=headers)
+    print("\n[BONUS 8] StateCollision — Reuse Candidate ID")
+    print("1st auth:", r1.status_code)
+
+    # Second auth with same ID
+    r2 = requests.post(f"{BASE_URL}/api/auth", headers=headers)
+    print("2nd auth:", r2.status_code, r2.text)
+
+    if r2.status_code == 409:
+        print("🐛 BONUS BUG — StateCollision confirmed, no session cleanup endpoint")
+    else:
+        print("✅ PASS — re-auth handled correctly")
+
 
 # ─── RUN ALL ─────────────────────────────────────────
 
@@ -435,6 +453,7 @@ if __name__ == "__main__":
     test_string_limit(token)
     test_no_candidate_id_on_videos(token)
     test_idor_access(token)
+    test_state_collision() 
 
     print("\n" + "="*40)
     print("TEST SUITE COMPLETED")
